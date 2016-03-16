@@ -1,2 +1,2 @@
 # Ephys-main
-Test readme
+Contains everything related to electrophysiological recordings
