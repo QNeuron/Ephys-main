@@ -30,7 +30,7 @@ tone_adjustment=1;
 
 % Amplitude adjustment params
 
-wantedDB = 80;
+wantedDB = 85;
 BenwaredBrms1 = 94;
 P0 = 1;
 fileFormat = 'f32';
@@ -509,7 +509,7 @@ for ii=1:numfiles %for each file
                 stimulus=[stimulus tone_high_harm_rand_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
         end
     end
-    filename=['KerryPitchSounds2013_' num2str(ii)];
+    filename=['QuentinPitchSounds2016_' num2str(ii)];
     switch fileFormat
         case 'wav'
             wavwrite(stimulus,sr,[filename '.wav']);
@@ -521,6 +521,7 @@ for ii=1:numfiles %for each file
             error('Invalid file format.');
     end
     save([filename '.mat'],'stimulus','trialf0s','trialtypes','soundtypes','reps','alltrialf0s','alltrialtypes');
+    disp(['QuentinPitchSounds2016_' num2str(ii) ' saved']);
 end
 %% Sanity check
 % sanity check 1
