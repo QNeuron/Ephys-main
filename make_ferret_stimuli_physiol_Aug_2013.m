@@ -30,10 +30,10 @@ tone_adjustment=1;
 
 % Amplitude adjustment params
 
-wantedDB = 70;
+wantedDB = 80;
 BenwaredBrms1 = 94;
 P0 = 1;
-
+fileFormat = 'f32';
 
 % Stage 2 - tones with high harmonics
 %
@@ -268,6 +268,35 @@ for i = 1:length(f0),
     
 end
 
+msg = 'Amplitude above 1 or bellow -1. WAV files will be clipped. Use fileFormat = f32 instead.';
+if strcmpi(fileFormat,'wav');
+    
+    if max(tone_pure_stim(:))>1 || min(tone_pure_stim(:))<-1,
+        warning();
+        break;
+    end
+    if max(tone_all_harm_stim(:))>1 || min(tone_all_harm_stim(:))<-1,
+        warning(msg);
+        break;
+    end
+    if max(tone_high_harm_stim(:))>1 || min(tone_high_harm_stim(:))<-1,
+        warning(msg);
+        break;
+    end
+    if max(tone_low_harm_stim(:))>1 || min(tone_low_harm_stim(:))<-1,
+        warning(msg);
+        break;
+    end
+    if max(tone_high_harm_alt_stim(:))>1 || min(tone_high_harm_alt_stim(:))<-1,
+        warning(msg);
+        break;
+    end
+    if max(tone_high_harm_rand_stim(:))>1 || min(tone_high_harm_rand_stim(:))<-1,
+        warning(msg);
+        break;
+    end
+    
+end
 disp('done')
 
 %% Plot Spectrum
@@ -481,7 +510,16 @@ for ii=1:numfiles %for each file
         end
     end
     filename=['KerryPitchSounds2013_' num2str(ii)];
-    wavwrite(stimulus,sr,[filename '.wav']);
+    switch fileFormat
+        case 'wav'
+            wavwrite(stimulus,sr,[filename '.wav']);
+        case 'f32'
+            fid = fopen([filename '.f32'], 'w');
+            fwrite(fid,stimulus, 'float32');
+            fclose(fid);
+        otherwise
+            error('Invalid file format.');
+    end
     save([filename '.mat'],'stimulus','trialf0s','trialtypes','soundtypes','reps','alltrialf0s','alltrialtypes');
 end
 %% Sanity check
