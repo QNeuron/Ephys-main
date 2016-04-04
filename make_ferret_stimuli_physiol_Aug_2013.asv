@@ -30,10 +30,10 @@ tone_adjustment=1;
 
 % Amplitude adjustment params
 
-wantedDB = 70;
+wantedDB = 85;
 BenwaredBrms1 = 94;
 P0 = 1;
-fileFormat = 'wav';
+fileFormat = 'f32';
 
 % Stage 2 - tones with high harmonics
 %
@@ -530,10 +530,27 @@ end
 
 soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
-
+% reps=20;
+% alltrialf0s=[];
+% alltrialtypes=[];
+% 
+% for kk=1:reps
+%     for ii=1:length(f0)
+%         for jj=1:length(soundtypes)
+%             alltrialf0s=[alltrialf0s f0(ii)];
+%         end
+%         alltrialtypes=[alltrialtypes soundtypes];
+%     end
+% end
+% 
+% r=randperm(length(alltrialtypes));
+% alltrialf0s=alltrialf0s(r);
+% alltrialtypes=alltrialtypes(r);
+% acquisitiontime=length(alltrialtypes)/60 % acquisition total time, in minutes.
+% numfiles=length(alltrialtypes)/40; % Number of 40-sec files we need to make !!This has to be an integer
 for fz = 1:length(f0),
-    for stim = soundtypes,
-        switch stim
+for stim = soundtypes,
+    switch stim
             case 1
                 stimulus=[tone_pure_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
             case 2
@@ -546,23 +563,60 @@ for fz = 1:length(f0),
                 stimulus=[tone_high_harm_alt_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
             case 6
                 stimulus=[tone_high_harm_rand_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-        end
-        
-        % Save
-        filename=sprintf('QuentinPitchSounds2016_%s_%dHz', soundNames{stim},f0(fz));
-        switch fileFormat
-            case 'wav'
-                wavwrite(stimulus,sr,[filename '.wav']);
-            case 'f32'
-                fid = fopen([filename '.f32'], 'w');
-                fwrite(fid,stimulus, 'float32');
-                fclose(fid);
-            otherwise
-                error('Invalid file format.');
-        end
-        disp([filename ' saved']);
-        
     end
+    
+    % Save
+    filename=sprintf('QuentinPitchSounds2016_' num2str(ii)];
+    switch fileFormat
+        case 'wav'
+            wavwrite(stimulus,sr,[filename '.wav']);
+        case 'f32'
+            fid = fopen([filename '.f32'], 'w');
+            fwrite(fid,stimulus, 'float32');
+            fclose(fid);
+        otherwise
+            error('Invalid file format.');
+    end
+    save([filename '.mat'],'stimulus','trialf0s','trialtypes','soundtypes','reps','alltrialf0s','alltrialtypes');
+    disp(['QuentinPitchSounds2016_' num2str(ii) ' saved']);
+    
+end
+end
+
+for ii=1:numfiles %for each file
+    stimulus=[];
+    stimInd=[1:40]+(ii-1)*40;
+    trialf0s=alltrialf0s(stimInd);
+    trialtypes=alltrialtypes(stimInd);
+    for jj=1:length(trialf0s)
+        switch trialtypes(jj)
+            case 1
+                stimulus=[stimulus tone_pure_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+            case 2
+                stimulus=[stimulus tone_all_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+            case 3
+                stimulus=[stimulus tone_high_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+            case 4
+                stimulus=[stimulus tone_low_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+            case 5
+                stimulus=[stimulus tone_high_harm_alt_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+            case 6
+                stimulus=[stimulus tone_high_harm_rand_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+        end
+    end
+    filename=['QuentinPitchSounds2016_' num2str(ii)];
+    switch fileFormat
+        case 'wav'
+            wavwrite(stimulus,sr,[filename '.wav']);
+        case 'f32'
+            fid = fopen([filename '.f32'], 'w');
+            fwrite(fid,stimulus, 'float32');
+            fclose(fid);
+        otherwise
+            error('Invalid file format.');
+    end
+    save([filename '.mat'],'stimulus','trialf0s','trialtypes','soundtypes','reps','alltrialf0s','alltrialtypes');
+    disp(['QuentinPitchSounds2016_' num2str(ii) ' saved']);
 end
 
 
