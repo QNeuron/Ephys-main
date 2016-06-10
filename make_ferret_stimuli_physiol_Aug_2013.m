@@ -30,7 +30,7 @@ tone_adjustment=1;
 
 % Amplitude adjustment params
 
-wantedDB = 70;
+wantedDB = 20;
 BenwaredBrms1 = 94;
 P0 = 1;
 fileFormat = 'wav';
@@ -528,7 +528,10 @@ end
 % Juste save 1 stim in one file + silence, Benware takes care of the
 % repeats and the randomization. Makes analyzing easier.
 
-soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
+% soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
+% soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
+
+soundtypes=1; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 
 for fz = 1:length(f0),
@@ -549,7 +552,7 @@ for fz = 1:length(f0),
         end
         
         % Save
-        filename=sprintf('QuentinPitchSounds2016_%s_%dHz', soundNames{stim},f0(fz));
+        filename=sprintf('QuentinPitchSounds2016_%s_%dHz_%ddB', soundNames{stim},f0(fz),wantedDB);
         switch fileFormat
             case 'wav'
                 wavwrite(stimulus,sr,[filename '.wav']);
