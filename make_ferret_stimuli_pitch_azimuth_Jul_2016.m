@@ -39,8 +39,10 @@ P0 = 1;
 fileFormat = 'wav';
 
 % Head transfer function params
-htfCIPICPath = 'D:\Work\Code\KingLab\VAS_test\ov2_to_cipic\cipic_hrtfs';
-htfName = 'HRTF_9965.mat';
+% htfCIPICPath = 'D:\Work\Code\KingLab\VAS_test\ov2_to_cipic\cipic_hrtfs';
+% htfName = 'HRTF_9965.mat';
+htfCIPICPath = 'D:\Work\Code\KingLab\VAS_test\CIPIC_hrtf_database\standard_hrir_database\subject_003';
+htfName = 'hrir_final.mat';
 htf = load(fullfile(htfCIPICPath,htfName));
 htf.name = htfName;
 
