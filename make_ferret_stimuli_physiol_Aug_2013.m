@@ -273,27 +273,27 @@ if strcmpi(fileFormat,'wav');
     
     if max(tone_pure_stim(:))>1 || min(tone_pure_stim(:))<-1,
         warning();
-        break;
+        return;
     end
     if max(tone_all_harm_stim(:))>1 || min(tone_all_harm_stim(:))<-1,
         warning(msg);
-        break;
+        return;
     end
     if max(tone_high_harm_stim(:))>1 || min(tone_high_harm_stim(:))<-1,
         warning(msg);
-        break;
+        return;
     end
     if max(tone_low_harm_stim(:))>1 || min(tone_low_harm_stim(:))<-1,
         warning(msg);
-        break;
+        return;
     end
     if max(tone_high_harm_alt_stim(:))>1 || min(tone_high_harm_alt_stim(:))<-1,
         warning(msg);
-        break;
+        return;
     end
     if max(tone_high_harm_rand_stim(:))>1 || min(tone_high_harm_rand_stim(:))<-1,
         warning(msg);
-        break;
+        return;
     end
     
 end
@@ -531,7 +531,7 @@ end
 % soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 % soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 
-soundtypes=1; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
+soundtypes=[1 2 3 4]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 
 for fz = 1:length(f0),
@@ -555,7 +555,7 @@ for fz = 1:length(f0),
         filename=sprintf('QuentinPitchSounds2016_%s_%dHz_%ddB', soundNames{stim},f0(fz),wantedDB);
         switch fileFormat
             case 'wav'
-                wavwrite(stimulus,sr,[filename '.wav']);
+                audiowrite([filename '.wav'],stimulus,sr);
             case 'f32'
                 fid = fopen([filename '.f32'], 'w');
                 fwrite(fid,stimulus, 'float32');

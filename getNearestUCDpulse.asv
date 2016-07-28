@@ -21,8 +21,6 @@ azimuths = [-80 -65 -55 -45:5:45 55 65 80];
 [azerr, az] = min(abs(pvaldeg(abs(azimuths - azimuth))));
 
 pulse = squeeze(h3D(az,el,:));
-SelAz = azimuths(az);
-SelEl = elevations(el);
 
 end
 

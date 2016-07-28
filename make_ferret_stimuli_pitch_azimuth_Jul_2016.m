@@ -27,15 +27,11 @@ numoct=2;
 f0 = round(octavesteps(250,stepsperoct,stepsperoct*numoct+1));
 
 rms_scale_factor = 100;
-
 tone_adjustment=1;
 
-
 % Amplitude adjustment params
-
 wantedDB = 50;
 BenwaredBrms1 = 94;
-P0 = 1;
 fileFormat = 'wav';
 
 % Head transfer function params
@@ -257,10 +253,10 @@ for ii=1:length(f0)
 end
 
 % Azimuth
-snd = structfun(@(x)(permute(repmat(x,[1 1 2]),[1 3 2])),snd,'UniformOutput',false);
+% snd = structfun(@(x)(permute(repmat(x,[1 1 2]),[1 3 2])),snd,'UniformOutput',false);
 for i = 1:size(htf.AzEl,1), % for every azimuth/elevation pairs
     flt_l = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_l);
-    flt_r = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_r);
+    [flt_r, htf.RealAzEl(i,1), htf.RealAzEl(i,2)] = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_r);
     
     snd_l(i) = structfun(@(x)(convM(x,flt_l)),snd,'UniformOutput',false);
     snd_r(i) = structfun(@(x)(convM(x,flt_r)),snd,'UniformOutput',false);
@@ -295,7 +291,7 @@ disp('done')
 % soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 % soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 
-soundtypes=1; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
+soundtypes=[1 2]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 stimNames = {'tone_pure_stim', 'tone_all_harm_stim', 'tone_high_harm_stim', 'tone_low_harm_stim', 'tone_high_harm_alt_stim', 'tone_high_harm_rand_stim'};
 for fz = 1:length(f0),
@@ -323,224 +319,49 @@ for fz = 1:length(f0),
 end
 
 
-%% Plot Spectrum
+%% Sanity check - listen, plot wav & plot fft of one stim
+stimField = 'tone_pure_stim'; % List in snd.()
+AzElInd = 1; % List in htf.RealAzEl
+F0Ind = 1; % List in f0
 
-% plotting stimuli
-figpos=[1283 -233 1662 420];
-xx=highcutoff/1000+1;
-midstim=ceil(size(tone_all_harm_stim,1)/2);
-xtype='linear';
+fprintf('Checking %s with azimuth %d deg, elevation %d deg, and F0 %d Hz\n',stimField,htf.RealAzEl(AzElInd,1),htf.RealAzEl(AzElInd,2),f0(F0Ind));
 
-figure %spectra
-set(gcf,'position',figpos)
-subplot(3,5,1);
-pwelch(tone_all_harm_stim(1,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title(f0(1))
-subplot(3,5,2);
-pwelch(tone_high_harm_stim(1,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title('High harmonics')
-subplot(3,5,3);
-pwelch(tone_low_harm_stim(1,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title('Low harmonics')
-subplot(3,5,4);
-pwelch(tone_high_harm_alt_stim(1,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title('ALT phase')
-subplot(3,5,5);
-pwelch(tone_high_harm_rand_stim(1,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title('Random phase')
+% listening to the stim
+sig = [snd_l(AzElInd).(stimField)(F0Ind,:);...
+    snd_r(AzElInd).(stimField)(F0Ind,:)];
+sound(sig,sr)
 
-subplot(3,5,6);
-pwelch(tone_all_harm_stim(midstim,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title(f0(midstim))
-subplot(3,5,7);
-pwelch(tone_high_harm_stim(midstim,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,8);
-pwelch(tone_low_harm_stim(midstim,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,9);
-pwelch(tone_high_harm_alt_stim(midstim,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,10);
-pwelch(tone_high_harm_rand_stim(midstim,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
+% plot waveforms
+figure;
+plot(snd_l(AzElInd).(stimField)(F0Ind,:));
+hold on;
+plot(snd_r(AzElInd).(stimField)(F0Ind,:));
+hold off
+legend({'left' 'right'})
+title('Waveforms')
 
-subplot(3,5,11);
-pwelch(tone_all_harm_stim(end,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-title(f0(end))
-subplot(3,5,12);
-pwelch(tone_high_harm_stim(end,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,13);
-pwelch(tone_low_harm_stim(end,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,14);
-pwelch(tone_high_harm_alt_stim(end,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-subplot(3,5,15);
-pwelch(tone_high_harm_rand_stim(end,:),[],[],[],sr);
-set(gca,'YLim',[-100 -50],'XLim',[0 xx],'XScale',xtype);
-
-%% Plot waveform
-
-figure %waveform
-set(gcf,'position',figpos)
-% plotdur=length(tone1_all_harm_stim);%duration to plot
-plotdur=floor(.1*sr); %plot just first 'x' ms
-subplot(2,5,1);
-plot([1:plotdur]./sr,tone_all_harm_stim(1,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-title('All harmonics')
-subplot(2,5,2);
-plot([1:plotdur]./sr,tone_high_harm_stim(1,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-title('High harmonics')
-subplot(2,5,3);
-plot([1:plotdur]./sr,tone_low_harm_stim(1,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-title('Low harmonics')
-subplot(2,5,4);
-plot([1:plotdur]./sr,tone_high_harm_alt_stim(1,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-title('ALT phase')
-subplot(2,5,5);
-plot([1:plotdur]./sr,tone_high_harm_rand_stim(1,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-title('Random phase')
-subplot(2,5,6);
-plot([1:plotdur]./sr,tone_all_harm_stim(end,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-subplot(2,5,7);
-plot([1:plotdur]./sr,tone_high_harm_stim(end,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-subplot(2,5,8);
-plot([1:plotdur]./sr,tone_low_harm_stim(end,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-subplot(2,5,9);
-plot([1:plotdur]./sr,tone_high_harm_alt_stim(end,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-subplot(2,5,10);
-plot([1:plotdur]./sr,tone_high_harm_rand_stim(end,1:plotdur));
-set(gca,'YLim',[-.2 .2]);
-
-xlabel('Time (s)')
-axis 'tight'
+% plot spectrums
+figure;
+plot_fft(snd_l(AzElInd).(stimField)(F0Ind,:),sr);
+hold on;
+plot_fft(snd_r(AzElInd).(stimField)(F0Ind,:),sr);
+hold off
+legend({'left' 'right'})
 
 
-%% listening to phase manipulations
+%% Sanity check 2 - listening to stim sequence
 
-% fullstimHIGH=[tone_all_harm_stim(midstim,:) zeros(1,ceil(sr*.5)) tone_high_harm_stim(midstim,:) zeros(1,ceil(sr*.5))];
-% fullstimLOW=[tone_all_harm_stim(midstim,:) zeros(1,ceil(sr*.5)) tone_low_harm_stim(midstim,:) zeros(1,ceil(sr*.5))];
-% fullstimALT=[tone_high_harm_stim(midstim,:) zeros(1,ceil(sr*.5)) tone_high_harm_alt_stim(midstim,:) zeros(1,ceil(sr*.5))];
-% fullstimRAND=[tone_high_harm_stim(midstim,:) zeros(1,ceil(sr*.5)) tone_high_harm_rand_stim(midstim,:) zeros(1,ceil(sr*.5))];
-% 
-% soundsc(repmat(fullstimHIGH,1,5),sr)
-% 
-% soundsc(repmat(fullstimLOW,1,5),sr)
-% 
-% soundsc(repmat(fullstimALT,1,5),sr)
-% 
-% soundsc(repmat(fullstimRAND,1,5),sr)
+stimField = 'tone_pure_stim'; % List in snd.()
+AzElInd = [1 2 3 4 5]; % List in htf.RealAzEl
+F0Ind = 1; % List in f0
 
+fprintf('Checking %s with F0 %d Hz, [Azimuth | Elevation] ',stimField,f0(F0Ind));
+fprintf(' [%d | %d],',htf.RealAzEl(AzElInd,1),htf.RealAzEl(AzElInd,2));
+fprintf('\n');
 
-%% Sanity check
-% sanity check 1
-figure(1); clf
-plot((1:length(stimulus))./sr,stimulus);
-figure(2); clf
-plot(trialf0s,'ok');
-
-% sanity check 2
-for ii=1
-    stimulus=[];
-    stimInd=[1:40]+(ii-1)*40;
-    trialf0s=alltrialf0s(stimInd);
-    trialtypes=alltrialtypes(stimInd);
-    for jj=1:length(trialf0s)
-        switch trialtypes(jj)
-            case 1
-                stimulus=[tone_pure_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-            case 2
-                stimulus=[tone_all_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-            case 3
-                stimulus=[tone_high_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-               
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-            case 4
-                stimulus=[tone_low_harm_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-                
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-            case 5
-                stimulus=[tone_high_harm_alt_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-                
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-            case 6
-                stimulus=[tone_high_harm_rand_stim(find(f0==trialf0s(jj)),:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
-                
-                plot((1:length(stimulus))./sr,stimulus)
-                title([num2str(trialf0s(jj)) 'Hz, ' num2str(trialtypes(jj))])
-                soundsc(stimulus,sr)
-                pause()
-        end
-    end
+sig = [];
+for i = 1:length(AzElInd)
+    sig = [sig [snd_l(AzElInd(i)).(stimField)(F0Ind,:) zeros(1,round(0.3*sr));...
+        snd_r(AzElInd(i)).(stimField)(F0Ind,:) zeros(1,round(0.3*sr))]];
 end
-
-%% Stim spectral enveloppe
-resolution = 500; % no oscillations above a freq > 1/resolution
-stim = tone_high_harm_rand_stim;
-% tone_pure_stim
-% tone_all_harm_stim
-% tone_high_harm_stim
-% tone_low_harm_stim
-% tone_high_harm_alt_stim
-% tone_high_harm_rand_stim
-
-for i = 1:size(stim,1),
-
-    x = stim(i,:);
-    
-    disp(['F0 : ' num2str(f0(i)) ' RMS=' num2str(rms(x))])
-    
-    figure;
-    title(['FO : ' num2str(f0(i))]);
-    [y, f] = plot_fft(x,sr,20000);
-    [yymax,yymin,maxi,argmaxi,mini,argmini]=enveloppe(y,resolution);
-    hold on
-    plot(f,yymax,'k');
-    hold off
-end
-
-% Resolved harmonic (nerve model)
-
-% All Tone
-Plot_physiol_stim_resolvability(f0,lowcutoff,highcutoff)
-
-% Low cut
-Plot_physiol_stim_resolvability(f0,lowcutoff,midcutoff)
-
-% High cut
-Plot_physiol_stim_resolvability(f0,midcutoff, highcutoff)
+sound(sig,sr)
