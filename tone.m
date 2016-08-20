@@ -18,4 +18,4 @@ t_int_ms = 1000/SAMPLERATE;
 phase_rads = 2*pi*phase;
 
 x = [0:t_int_ms:(duration_ms-t_int_ms)];
-signal = sin(2*pi*frequency*x/1000 + phase_rads);
+signal = sin(2*pi*frequency.*x/1000 + phase_rads);
