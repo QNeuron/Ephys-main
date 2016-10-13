@@ -4,10 +4,24 @@
 % convert raw ferret htrf to CIPIC htrf.
 %
 % Quentin 07 2016
-% Inspired from make_ferret_stimuli_physiol_Aug_2013.m
+% Adapted from make_ferret_stimuli_physiol_Aug_2013.m
 %
+% Quentin 10 2016
+% Works with Jan HTRF directly
+% Resample
+% 
+% 
 % Make sure the parameters of your stimuli fits with those from the non
 % azimuth modulated ones !
+
+%% set paths
+oldPath = path;
+newpath = genpath('D:\Work\Code\KingLab\VAS_test\');
+path(oldPath,newpath)
+
+
+%% Make stim
+
 
 close all
 clear
@@ -30,7 +44,7 @@ rms_scale_factor = 100;
 tone_adjustment=1;
 
 % Amplitude adjustment params
-wantedDB = 50;
+wantedDB = 70;
 BenwaredBrms1 = 94;
 fileFormat = 'wav';
 
@@ -254,9 +268,14 @@ end
 
 % Azimuth
 % snd = structfun(@(x)(permute(repmat(x,[1 1 2]),[1 3 2])),snd,'UniformOutput',false);
+ind = [];
 for i = 1:size(htf.AzEl,1), % for every azimuth/elevation pairs
-    flt_l = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_l);
-    [flt_r, htf.RealAzEl(i,1), htf.RealAzEl(i,2)] = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_r);
+%     flt_l = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_l);
+%     [flt_r, htf.RealAzEl(i,1), htf.RealAzEl(i,2)] = getNearestUCDpulse(htf.AzEl(i,1),htf.AzEl(i,2),htf.hrir_r);
+    
+    [flt_l, flt_r, ind] = getVASfromJan(htf.AzEl(i,1),htf.AzEl(i,2),ind);
+    flt_l = resample(flt_l,round(sr),80000);
+    flt_r = resample(flt_r,round(sr),80000);
     
     snd_l(i) = structfun(@(x)(convM(x,flt_l)),snd,'UniformOutput',false);
     snd_r(i) = structfun(@(x)(convM(x,flt_r)),snd,'UniformOutput',false);
@@ -270,7 +289,7 @@ for i = 1:length(f0), % F0
         for j = 1:size(htf.AzEl,1) % Azimuths
             for k = 1:length(fList), % Sound types
                 snd_l(j).(fList{k})(i,:) = adjustRMSbenware( snd_l(j).(fList{k})(i,:),wantedDB,BenwaredBrms1);
-                snd_r(j).(fList{k})(i,:) = adjustRMSbenware( snd_l(j).(fList{k})(i,:),wantedDB,BenwaredBrms1);
+                snd_r(j).(fList{k})(i,:) = adjustRMSbenware( snd_r(j).(fList{k})(i,:),wantedDB,BenwaredBrms1);
                 maxVal = max([maxVal max(abs(snd_l(j).(fList{k})(i,:))) max(abs(snd_r(j).(fList{k})(i,:)))]);
             end
         end
@@ -294,12 +313,14 @@ disp('done')
 soundtypes=[1 2]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 stimNames = {'tone_pure_stim', 'tone_all_harm_stim', 'tone_high_harm_stim', 'tone_low_harm_stim', 'tone_high_harm_alt_stim', 'tone_high_harm_rand_stim'};
+silDur = 0.3;
+silVect = zeros(1,round(silDur*sr));
 for fz = 1:length(f0),
     for stim = soundtypes,
         for azimuth = 1:size(htf.AzEl,1),
             clear stimulus
-            stimulus(:,1) = snd_l(azimuth).(stimNames{stim})(fz,:);
-            stimulus(:,2) = snd_r(azimuth).(stimNames{stim})(fz,:);
+            stimulus(:,1) = [snd_l(azimuth).(stimNames{stim})(fz,:) silVect];
+            stimulus(:,2) = [snd_r(azimuth).(stimNames{stim})(fz,:) silVect];
             
             % Save
             filename=sprintf('QuentinPitchSounds2016_%s_%dHz_%ddB_%ddeg', soundNames{stim},f0(fz),wantedDB,htf.AzEl(azimuth,1));
@@ -318,6 +339,9 @@ for fz = 1:length(f0),
     end
 end
 
+%% restore paths
+
+path(oldPath);
 
 %% Sanity check - listen, plot wav & plot fft of one stim
 stimField = 'tone_pure_stim'; % List in snd.()
