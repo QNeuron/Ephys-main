@@ -30,7 +30,7 @@ tone_adjustment=1;
 
 % Amplitude adjustment params
 
-wantedDB = 20;
+wantedDB = 70;
 BenwaredBrms1 = 94;
 P0 = 1;
 fileFormat = 'wav';
@@ -531,24 +531,25 @@ end
 % soundtypes=1:6; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 % soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 
-soundtypes=[1 2 3 4]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
+soundtypes=[1 2 3 4 5 6]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
-
+silDur = 0.5;
+silVect = zeros(1,round(silDur*sr));
 for fz = 1:length(f0),
     for stim = soundtypes,
         switch stim
             case 1
-                stimulus=[tone_pure_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_pure_stim(fz,:) silVect];
             case 2
-                stimulus=[tone_all_harm_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_all_harm_stim(fz,:) silVect];
             case 3
-                stimulus=[tone_high_harm_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_high_harm_stim(fz,:) silVect];
             case 4
-                stimulus=[tone_low_harm_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_low_harm_stim(fz,:) silVect];
             case 5
-                stimulus=[tone_high_harm_alt_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_high_harm_alt_stim(fz,:) silVect];
             case 6
-                stimulus=[tone_high_harm_rand_stim(fz,:) zeros(1,floor((1000-stim_dur_ms)/1000*sr))];
+                stimulus=[tone_high_harm_rand_stim(fz,:) silVect];
         end
         
         % Save

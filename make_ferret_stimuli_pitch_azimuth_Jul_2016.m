@@ -313,7 +313,7 @@ disp('done')
 soundtypes=[1 2]; % 1 tone, 2 all harm, 3 high, 4 low, 5 alt, 6 rand
 soundNames = {'tone', 'all_harm', 'high', 'low', 'alt', 'rand'};
 stimNames = {'tone_pure_stim', 'tone_all_harm_stim', 'tone_high_harm_stim', 'tone_low_harm_stim', 'tone_high_harm_alt_stim', 'tone_high_harm_rand_stim'};
-silDur = 0.3;
+silDur = 0.5;
 silVect = zeros(1,round(silDur*sr));
 for fz = 1:length(f0),
     for stim = soundtypes,
